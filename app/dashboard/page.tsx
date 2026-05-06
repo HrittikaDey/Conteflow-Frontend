@@ -324,7 +324,7 @@ clearTimeout(timeoutId);
               {/* Master export */}
 <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
   <button
-    onClick={() => downloadFile(buildMarkdown(result.blog_post), result.blog_post.slug + '.md', 'text/markdown')}
+    onClick={() => downloadFile(buildMarkdown((result.blog_post as any).slug), result.blog_post.slug + '.md', 'text/markdown')}
     style={{ padding: '10px 16px', borderRadius: '10px', background: 'rgba(74,222,128,0.1)', border: '0.5px solid rgba(74,222,128,0.25)', color: '#4ade80', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
     ⬇️ Blog .md
   </button>
