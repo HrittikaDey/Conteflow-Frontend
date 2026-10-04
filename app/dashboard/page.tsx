@@ -99,6 +99,13 @@ export default function Home() {
   const [result, setResult] = useState<PipelineResult | null>(null);
   const [activeTab, setActiveTab] = useState('blog');
   const [copied, setCopied] = useState('');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+const [genCount, setGenCount] = useState(() => {
+  if (typeof window !== 'undefined') {
+    return parseInt(localStorage.getItem('gen_count') || '0');
+  }
+  return 0;
+});
   const [error, setError] = useState('');
 
   const agents = [
@@ -140,6 +147,12 @@ export default function Home() {
         : { error: await res.text() };
       if (!res.ok) throw new Error(data.error || 'Pipeline failed');
       setResult(data);
+      const newCount = genCount + 1;
+setGenCount(newCount);
+localStorage.setItem('gen_count', newCount.toString());
+if (newCount >= 3) {
+  setShowUpgradeModal(true);
+}
       setAgentStatus(agents.map(a => a.name));
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Pipeline failed.');
@@ -158,6 +171,99 @@ export default function Home() {
   return (
     <main style={{ minHeight: '100vh', padding: '0 0 80px' }}>
       <Navbar />
+      {/* Upgrade Modal */}
+{showUpgradeModal && (
+  <div style={{
+    position: 'fixed', inset: 0, zIndex: 1000,
+    background: 'rgba(0,0,0,0.85)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: '24px'
+  }}>
+    <div style={{
+      background: '#0f0f1a',
+      border: '0.5px solid rgba(108,99,255,0.3)',
+      borderRadius: '20px', padding: '40px',
+      maxWidth: '480px', width: '100%',
+      textAlign: 'center'
+    }}>
+      <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚀</div>
+
+      <h2 style={{
+        fontFamily: 'Playfair Display, serif',
+        fontSize: '28px', fontWeight: 700,
+        color: '#fff', marginBottom: '12px'
+      }}>
+        You're on a roll!
+      </h2>
+
+      <p style={{
+        color: 'rgba(255,255,255,0.5)',
+        fontSize: '15px', lineHeight: 1.6,
+        marginBottom: '28px'
+      }}>
+        You've used your 3 free generations.
+        Upgrade to Pro for unlimited content creation.
+      </p>
+
+      <div style={{
+        background: 'rgba(108,99,255,0.08)',
+        border: '0.5px solid rgba(108,99,255,0.2)',
+        borderRadius: '12px', padding: '20px',
+        marginBottom: '28px', textAlign: 'left'
+      }}>
+        {[
+          '✅ Unlimited generations',
+          '✅ LinkedIn auto-posting',
+          '✅ Full run history',
+          '✅ Priority generation speed',
+          '✅ Email support',
+        ].map(feature => (
+          <div key={feature} style={{
+            fontSize: '14px', color: 'rgba(255,255,255,0.7)',
+            marginBottom: '8px'
+          }}>
+            {feature}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginBottom: '24px' }}>
+        <span style={{
+          fontSize: '40px', fontWeight: 700,
+          color: '#fff', fontFamily: 'Playfair Display, serif'
+        }}>$29</span>
+        <span style={{
+          fontSize: '16px', color: 'rgba(255,255,255,0.4)'
+        }}>/month</span>
+      </div>
+
+      <button
+        onClick={() => {
+          alert('Coming soon! Email us at conteflow@gmail.com for early Pro access.');
+        }}
+        style={{
+          width: '100%', padding: '16px',
+          borderRadius: '12px', border: 'none',
+          background: 'linear-gradient(135deg, #6c63ff, #f06292)',
+          color: '#fff', fontSize: '16px',
+          fontWeight: 700, cursor: 'pointer',
+          marginBottom: '12px'
+        }}>
+        Upgrade to Pro — $29/month
+      </button>
+
+      <button
+        onClick={() => setShowUpgradeModal(false)}
+        style={{
+          background: 'none', border: 'none',
+          color: 'rgba(255,255,255,0.3)',
+          fontSize: '14px', cursor: 'pointer'
+        }}>
+        Maybe later
+      </button>
+    </div>
+  </div>
+)}
       {/* Toast notification */}
 {copied && (
   <div style={{
