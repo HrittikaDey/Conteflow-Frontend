@@ -9,7 +9,7 @@ const AUDIENCES = ['Marketing Managers', 'Startup Founders', 'General Public', '
 
 interface PipelineResult {
   run_id: string;
-  blog_post: { title: string; intro: string; sections: { heading: string; body: string }[]; conclusion: string; cta: string; word_count: number };
+  blog_post: { slug?: string; title: string; intro: string; sections: { heading: string; body: string }[]; conclusion: string; cta: string; word_count: number };
   social_posts: { linkedin: { post: string; hashtags: string[] }; twitter: { post: string; hashtags: string[] }; instagram: { caption: string; hashtags: string[]; emoji_hook: string } };
   email_newsletter: { subject_line: string; preview_text: string; opening_paragraph: string; main_sections: { heading: string; body: string }[]; cta_button_text: string; closing_paragraph: string };
   seo_data: { meta_title: string; meta_description: string; focus_keyword: string; secondary_keywords: string[]; faq: { question: string; answer: string }[]; estimated_read_time: string };
@@ -34,12 +34,12 @@ function downloadFile(content: string, filename: string, type: string) {
 }
 
 // Build markdown from blog post
-function buildMarkdown(blog: any): string {
+function buildMarkdown(blog: PipelineResult['blog_post']): string {
   return `# ${blog.title}
 
 ${blog.intro}
 
-${blog.sections?.map((s: any) => `## ${s.heading}\n\n${s.body}`).join('\n\n')}
+${blog.sections?.map(s => `## ${s.heading}\n\n${s.body}`).join('\n\n')}
 
 ${blog.conclusion}
 
@@ -48,7 +48,7 @@ ${blog.conclusion}
 }
 
 // Build social text file
-function buildSocialText(social: any): string {
+function buildSocialText(social: PipelineResult['social_posts']): string {
   return `=== LINKEDIN ===
 ${social.linkedin.post}
 
@@ -69,14 +69,14 @@ Hashtags: ${social.instagram.hashtags?.map((h: string) => '#' + h).join(' ')}
 }
 
 // Build email HTML
-function buildEmailHTML(email: any): string {
+function buildEmailHTML(email: PipelineResult['email_newsletter']): string {
   return `<!DOCTYPE html>
 <html>
 <body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;color:#1a1a2e;">
   <h1 style="font-size:26px;margin-bottom:8px;">${email.subject_line}</h1>
   <p style="color:#888;font-size:13px;margin-bottom:28px;">${email.preview_text}</p>
   <p style="font-size:15px;line-height:1.7;margin-bottom:24px;">${email.opening_paragraph}</p>
-  ${email.main_sections?.map((s: any) => `
+  ${email.main_sections?.map(s => `
   <div style="margin-bottom:24px;padding-left:16px;border-left:3px solid #6c63ff;">
     <h2 style="color:#6c63ff;font-size:17px;margin-bottom:8px;">${s.heading}</h2>
     <p style="font-size:15px;line-height:1.7;color:#444;">${s.body}</p>
@@ -124,22 +124,25 @@ export default function Home() {
 
     try {
       const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), 120000);
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
 
-const res = await fetch('/api/pipeline', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ topic, tone: tone.toLowerCase(), audience }),
-  signal: controller.signal,
-});
+      const res = await fetch('/api/pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, tone: tone.toLowerCase(), audience }),
+        signal: controller.signal,
+      });
 
-clearTimeout(timeoutId);
-      const data = await res.json();
+      clearTimeout(timeoutId);
+      const contentType = res.headers.get('content-type') || '';
+      const data = contentType.includes('application/json')
+        ? await res.json()
+        : { error: await res.text() };
       if (!res.ok) throw new Error(data.error || 'Pipeline failed');
       setResult(data);
       setAgentStatus(agents.map(a => a.name));
-    } catch (err) {
-      setError('Pipeline failed. Make sure your Bun server is running on port 3000.');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Pipeline failed.');
     } finally {
       setLoading(false);
     }
@@ -324,7 +327,7 @@ clearTimeout(timeoutId);
               {/* Master export */}
 <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
   <button
-    onClick={() => downloadFile(buildMarkdown((result.blog_post as any).slug), result.blog_post.slug + '.md', 'text/markdown')}
+    onClick={() => downloadFile(buildMarkdown(result.blog_post), ((result.blog_post as any).slug || 'blog-post') + '.md', 'text/markdown')}
     style={{ padding: '10px 16px', borderRadius: '10px', background: 'rgba(74,222,128,0.1)', border: '0.5px solid rgba(74,222,128,0.25)', color: '#4ade80', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
     ⬇️ Blog .md
   </button>
@@ -341,7 +344,8 @@ clearTimeout(timeoutId);
   <button
     onClick={() => copyText(
       'BLOG: ' + result.blog_post.title + '\n\nLINKEDIN: ' + result.social_posts.linkedin.post + '\n\nEMAIL SUBJECT: ' + result.email_newsletter.subject_line + '\n\nSEO KEYWORD: ' + result.seo_data.focus_keyword,
-      'All content summary'
+      'All content summary',
+      setCopied
     )}
     style={{ padding: '10px 16px', borderRadius: '10px', background: 'rgba(74,222,128,0.1)', border: '0.5px solid rgba(74,222,128,0.25)', color: '#4ade80', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
     📋 Copy summary
@@ -399,7 +403,7 @@ clearTimeout(timeoutId);
     style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(124,110,247,0.1)', border: '0.5px solid rgba(124,110,247,0.3)', color: '#7c6ef7', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
     📋 Copy blog
   </button>
-  <button onClick={() => downloadFile(buildMarkdown(result.blog_post), result.blog_post.slug + '.md', 'text/markdown')}
+  <button onClick={() => downloadFile(buildMarkdown(result.blog_post), (result.blog_post.slug || 'blog-post') + '.md', 'text/markdown')}
     style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(124,110,247,0.1)', border: '0.5px solid rgba(124,110,247,0.3)', color: '#7c6ef7', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
     ⬇️ Download .md
   </button>
@@ -484,7 +488,7 @@ clearTimeout(timeoutId);
                       <div style={{ padding: '12px 20px', background: 'rgba(77,208,225,0.1)', border: '0.5px solid rgba(77,208,225,0.3)', borderRadius: '8px', display: 'inline-block', marginTop: '8px', fontSize: '14px', fontWeight: 600, color: '#4dd0e1' }}>
                         {/* Email export buttons */}
 <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-  <button onClick={() => copyText(result.email_newsletter.opening_paragraph + '\n\n' + result.email_newsletter.main_sections?.map((s: any) => s.heading + '\n' + s.body).join('\n\n'), 'Email')}
+  <button onClick={() => copyText(result.email_newsletter.opening_paragraph + '\n\n' + result.email_newsletter.main_sections?.map(s => s.heading + '\n' + s.body).join('\n\n'), 'Email', setCopied)}
     style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(77,208,225,0.1)', border: '0.5px solid rgba(77,208,225,0.3)', color: '#4dd0e1', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
     📋 Copy email
   </button>

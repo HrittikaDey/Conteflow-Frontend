@@ -1,9 +1,9 @@
 'use client';
+import { supabase } from '../../lib/supabase';
 import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '../../components/Navbar';
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
