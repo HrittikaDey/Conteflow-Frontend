@@ -150,7 +150,7 @@ const [genCount, setGenCount] = useState(() => {
       const newCount = genCount + 1;
 setGenCount(newCount);
 localStorage.setItem('gen_count', newCount.toString());
-if (newCount >= 3) {
+if (newCount >= 4) {
   setShowUpgradeModal(true);
 }
       setAgentStatus(agents.map(a => a.name));
