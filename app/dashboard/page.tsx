@@ -518,65 +518,194 @@ if (newCount >= 4) {
                   )}
 
                   {activeTab === 'social' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                      {[
-                        { name: 'LinkedIn', color: '#0077b5', post: result.social_posts.linkedin.post, tags: result.social_posts.linkedin.hashtags },
-                        { name: 'Twitter / X', color: '#1da1f2', post: result.social_posts.twitter.post, tags: result.social_posts.twitter.hashtags },
-                        { name: 'Instagram', color: '#f06292', post: result.social_posts.instagram.caption, tags: result.social_posts.instagram.hashtags },
-                      ].map(platform => (
-                        <div key={platform.name} style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', border: '0.5px solid var(--border)', borderRadius: '12px' }}>
-                          <div style={{ fontSize: '12px', fontWeight: 600, color: platform.color, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{platform.name}</div>
-                          <p style={{ color: 'var(--text-primary)', fontSize: '14px', lineHeight: 1.7, marginBottom: '12px' }}>{platform.post}</p>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                            {platform.tags?.slice(0, 5).map((tag, i) => (
-                              <span key={i} style={{ fontSize: '12px', color: platform.color, background: platform.color + '15', padding: '3px 10px', borderRadius: '100px' }}>#{tag}</span>
-                            ))}
-                            {/* Social export buttons */}
-<div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-  <button onClick={() => copyText(buildSocialText(result.social_posts), 'Social posts', setCopied)}
-    style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(240,98,146,0.1)', border: '0.5px solid rgba(240,98,146,0.3)', color: '#f06292', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
-    📋 Copy all social posts
-  </button>
-  <button onClick={() => downloadFile(buildSocialText(result.social_posts), 'social-posts.txt', 'text/plain')}
-    style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(240,98,146,0.1)', border: '0.5px solid rgba(240,98,146,0.3)', color: '#f06292', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
-    ⬇️ Download .txt
-  </button>
-  <button
-  onClick={async () => {
-    try {
-      const res = await fetch('/api/linkedin/post', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          post: result.social_posts.linkedin.post,
-          hashtags: result.social_posts.linkedin.hashtags
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setCopied('Posted to LinkedIn');
-      } else {
-        alert(data.error || 'Connect LinkedIn first');
-      }
-    } catch {
-      alert('Connect LinkedIn first');
-    }
-  }}
-  style={{
-    flex: 1, padding: '10px', borderRadius: '8px',
-    background: '#0077b5', border: 'none',
-    color: '#fff', fontSize: '13px',
-    fontWeight: 600, cursor: 'pointer'
-  }}>
-  🚀 Post to LinkedIn
-</button>
-</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
+    {/* LinkedIn Box */}
+    <div style={{
+      padding: '24px',
+      background: 'rgba(0,119,181,0.06)',
+      border: '0.5px solid rgba(0,119,181,0.3)',
+      borderRadius: '14px'
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between', marginBottom: '16px'
+      }}>
+        <div style={{ fontSize: '13px', fontWeight: 700, color: '#0077b5', letterSpacing: '0.08em' }}>
+          💼 LINKEDIN
+        </div>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>
+          {result.social_posts.linkedin.character_count} chars
+        </div>
+      </div>
+      <p style={{ color: 'var(--text-primary)', fontSize: '14px', lineHeight: 1.8, marginBottom: '16px', whiteSpace: 'pre-wrap' }}>
+        {result.social_posts.linkedin.post}
+      </p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
+        {result.social_posts.linkedin.hashtags?.slice(0, 5).map((tag: string, i: number) => (
+          <span key={i} style={{ fontSize: '12px', color: '#0077b5', background: 'rgba(0,119,181,0.1)', padding: '3px 10px', borderRadius: '20px' }}>
+            #{tag}
+          </span>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button onClick={() => copyText(result.social_posts.linkedin.post, 'LinkedIn post', setCopied)}
+          style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(0,119,181,0.1)', border: '0.5px solid rgba(0,119,181,0.3)', color: '#0077b5', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+          📋 Copy
+        </button>
+        <button
+          onClick={async () => {
+            try {
+              const res = await fetch('/api/linkedin/post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  post: result.social_posts.linkedin.post,
+                  hashtags: result.social_posts.linkedin.hashtags
+                })
+              });
+              const data = await res.json();
+              if (data.success) {
+                setCopied('Posted to LinkedIn');
+              } else {
+                alert(data.error || 'Connect LinkedIn first');
+              }
+            } catch {
+              alert('Connect LinkedIn first');
+            }
+          }}
+          style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#0077b5', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+          🚀 Post to LinkedIn
+        </button>
+      </div>
+    </div>
+
+    {/* Twitter Box */}
+    <div style={{
+      padding: '24px',
+      background: 'rgba(29,161,242,0.06)',
+      border: '0.5px solid rgba(29,161,242,0.3)',
+      borderRadius: '14px'
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between', marginBottom: '16px'
+      }}>
+        <div style={{ fontSize: '13px', fontWeight: 700, color: '#1DA1F2', letterSpacing: '0.08em' }}>
+          🐦 TWITTER / X
+        </div>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>
+          {result.social_posts.twitter.character_count} chars
+        </div>
+      </div>
+      <p style={{ color: 'var(--text-primary)', fontSize: '14px', lineHeight: 1.8, marginBottom: '16px' }}>
+        {result.social_posts.twitter.post}
+      </p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
+        {result.social_posts.twitter.hashtags?.slice(0, 3).map((tag: string, i: number) => (
+          <span key={i} style={{ fontSize: '12px', color: '#1DA1F2', background: 'rgba(29,161,242,0.1)', padding: '3px 10px', borderRadius: '20px' }}>
+            #{tag}
+          </span>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button onClick={() => copyText(result.social_posts.twitter.post, 'Twitter post', setCopied)}
+          style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(29,161,242,0.1)', border: '0.5px solid rgba(29,161,242,0.3)', color: '#1DA1F2', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+          📋 Copy
+        </button>
+        <button
+          onClick={async () => {
+            try {
+              const res = await fetch('/api/twitter/post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  post: result.social_posts.twitter.post,
+                  hashtags: result.social_posts.twitter.hashtags
+                })
+              });
+              const data = await res.json();
+              if (data.success) {
+                setCopied('Posted to Twitter');
+              } else {
+                alert(data.error || 'Connect Twitter first');
+              }
+            } catch {
+              alert('Connect Twitter first');
+            }
+          }}
+          style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#1DA1F2', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+          🐦 Post to Twitter
+        </button>
+      </div>
+    </div>
+
+    {/* Instagram Box */}
+    <div style={{
+      padding: '24px',
+      background: 'rgba(240,98,146,0.06)',
+      border: '0.5px solid rgba(240,98,146,0.3)',
+      borderRadius: '14px'
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between', marginBottom: '16px'
+      }}>
+        <div style={{ fontSize: '13px', fontWeight: 700, color: '#f06292', letterSpacing: '0.08em' }}>
+          📸 INSTAGRAM
+        </div>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>
+          {result.social_posts.instagram.character_count} chars
+        </div>
+      </div>
+      <div style={{ fontSize: '20px', marginBottom: '12px' }}>
+        {result.social_posts.instagram.emoji_hook}
+      </div>
+      <p style={{ color: 'var(--text-primary)', fontSize: '14px', lineHeight: 1.8, marginBottom: '16px', whiteSpace: 'pre-wrap' }}>
+        {result.social_posts.instagram.caption}
+      </p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
+        {result.social_posts.instagram.hashtags?.slice(0, 10).map((tag: string, i: number) => (
+          <span key={i} style={{ fontSize: '12px', color: '#f06292', background: 'rgba(240,98,146,0.1)', padding: '3px 10px', borderRadius: '20px' }}>
+            #{tag}
+          </span>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button onClick={() => copyText(result.social_posts.instagram.caption, 'Instagram caption', setCopied)}
+          style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(240,98,146,0.1)', border: '0.5px solid rgba(240,98,146,0.3)', color: '#f06292', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+          📋 Copy
+        </button>
+        <button
+          onClick={async () => {
+            try {
+              const res = await fetch('/api/instagram/post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  caption: result.social_posts.instagram.caption,
+                  hashtags: result.social_posts.instagram.hashtags,
+                  emoji_hook: result.social_posts.instagram.emoji_hook
+                })
+              });
+              const data = await res.json();
+              if (data.success) {
+                setCopied('Posted to Instagram');
+              } else {
+                alert(data.error || 'Instagram requires an image. Connect Instagram first.');
+              }
+            } catch {
+              alert('Connect Instagram first');
+            }
+          }}
+          style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'linear-gradient(45deg, #f09433, #dc2743, #bc1888)', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+          📸 Post to Instagram
+        </button>
+      </div>
+    </div>
+
+  </div>
+)}
                   {activeTab === 'email' && (
                     <div>
                       <div style={{ padding: '16px', background: 'rgba(77,208,225,0.05)', border: '0.5px solid rgba(77,208,225,0.2)', borderRadius: '10px', marginBottom: '20px' }}>
